@@ -29,7 +29,7 @@ const { useState, useMemo } = React;
 //  terminar en /exec. NO sirve la URL del editor (/edit).
 //  Ejemplo: https://script.google.com/macros/s/AKfyc.../exec
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/PEGA_AQUI_TU_ID_DE_IMPLEMENTACION/exec";
+  "https://script.google.com/macros/s/AKfycbwMrKr8zH4a6saHbOvpy4MSwxh7_BkCoIi03_D_nyTF3YeVnP-Gz8psXTc4JJHhs_IjXg/exec";
 // ============================================================
 
 const C = {
@@ -461,14 +461,23 @@ function App() {
   const iniciar = () => { if (nombre.trim() && curso.trim()) setFase("examen"); };
 
   const enviarSheets = () => {
-    const url =
+    const letras = ["A", "B", "C", "D"];
+    let url =
       SCRIPT_URL +
-      "?nombre=" + encodeURIComponent(nombre) +
+      "?asignatura=" + encodeURIComponent("Simulacro ICFES 2025") +
+      "&nombre=" + encodeURIComponent(nombre) +
       "&curso=" + encodeURIComponent(curso) +
       "&puntaje=" + resultado.correctas +
       "&total=" + total +
       "&porcentaje=" + resultado.pct +
       "&fecha=" + encodeURIComponent(new Date().toLocaleString("es-CO"));
+    PREGUNTAS.forEach((q, i) => {
+      const r = respuestas[i];
+      let val = "-";
+      if (r !== null) val = letras[r] + (r === q.correcta ? " ✓" : " ✗");
+      url += "&p" + (i + 1) + "=" + encodeURIComponent(val);
+    });
+    // Envío con window.open (abre una pestaña con la confirmación del script).
     window.open(url, "_blank");
     setEnviado(true);
   };
@@ -544,8 +553,8 @@ function App() {
           </div>
           {enviado && (
             <p style={{ textAlign: "center", color: C.good, fontSize: 12.5, marginTop: 12 }}>
-              Se abrió una pestaña para enviar los datos. Si no se registró, verifica que la URL del script esté
-              desplegada como aplicación web (termina en /exec).
+              Se abrió una pestaña que confirma el registro ({"ok":true}). Puedes cerrarla.
+              El resultado quedará en la hoja de cálculo.
             </p>
           )}
 
