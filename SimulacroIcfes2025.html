@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Simulacro ICFES 2025 · Matemáticas</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: #f7f4ee; }
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+
+// ============================================================
+//  SIMULACRO ICFES 2025 — Matemáticas (25 preguntas)
+//  Institución Educativa Técnica Agropecuaria de Luruaco
+// ------------------------------------------------------------
+//  CONFIGURA AQUÍ LA URL DE TU APPS SCRIPT.
+//  Debe ser la URL de IMPLEMENTACIÓN como aplicación web
+//  (Implementar > Nueva implementación > Aplicación web) y
+//  terminar en /exec. NO sirve la URL del editor (/edit).
+//  Ejemplo: https://script.google.com/macros/s/AKfyc.../exec
+const SCRIPT_URL =
+  "https://script.google.com/macros/s/PEGA_AQUI_TU_ID_DE_IMPLEMENTACION/exec";
+// ============================================================
+
+const C = {
+  ink: "#0f2a3f",
+  inkSoft: "#1e3a52",
+  amber: "#d98326",
+  paper: "#f7f4ee",
+  card: "#ffffff",
+  line: "#dfe5e3",
+  good: "#1f7a4d",
+  bad: "#b3402f",
+  muted: "#5b6b73",
+};
+
+// ---------- Figuras SVG ----------
+
+function BarVentas() {
+  const meses = [
+    { m: "Enero", v: [5500, 9000, 4000, 4000] },
+    { m: "Febrero", v: [5000, 7000, 6500, 5000] },
+    { m: "Marzo", v: [5000, 8500, 7500, 5500] },
+    { m: "Abril", v: [5000, 7000, 6000, 6000] },
+  ];
+  const colors = ["#cbd5e1", "#0f172a", "#ffffff", "#475569"];
+  const labels = ["Agua", "Gaseosa", "Cerveza", "Jugos"];
+  const max = 10000;
+  return (
+    <svg viewBox="0 0 360 230" width="100%" style={{ maxWidth: 420 }}>
+      {[0, 2500, 5000, 7500, 10000].map((g) => {
+        const y = 180 - (g / max) * 160;
+        return (
+          <g key={g}>
+            <line x1="34" y1={y} x2="350" y2={y} stroke="#e2e8f0" />
+            <text x="30" y={y + 3} fontSize="7" textAnchor="end" fill="#64748b">{g / 1000}.000</text>
+          </g>
+        );
+      })}
+      {meses.map((mo, i) => {
+        const groupX = 44 + i * 78;
+        return (
+          <g key={mo.m}>
+            {mo.v.map((val, j) => {
+              const h = (val / max) * 160;
+              return (
+                <rect key={j} x={groupX + j * 15} y={180 - h} width="13" height={h}
+                  fill={colors[j]} stroke="#0f172a" strokeWidth="0.6" />
+              );
+            })}
+            <text x={groupX + 30} y="192" fontSize="8" textAnchor="middle" fill="#334155">{mo.m}</text>
+          </g>
+        );
+      })}
+      {labels.map((l, i) => (
+        <g key={l}>
+          <rect x={44 + i * 80} y="205" width="9" height="9" fill={colors[i]} stroke="#0f172a" strokeWidth="0.6" />
+          <text x={56 + i * 80} y="213" fontSize="8" fill="#334155">{l}</text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+function BarPacientes({ data, label }) {
+  const max = 12;
+  const horas = ["7-8", "8-9", "9-10", "10-11", "11-12"];
+  return (
+    <svg viewBox="0 0 240 170" width="100%" style={{ maxWidth: 280 }}>
+      {[0, 2, 4, 6, 8, 10, 12].map((g) => {
+        const y = 130 - (g / max) * 120;
+        return (
+          <g key={g}>
+            <line x1="26" y1={y} x2="232" y2={y} stroke="#e2e8f0" />
+            <text x="22" y={y + 3} fontSize="7" textAnchor="end" fill="#64748b">{g}</text>
+          </g>
+        );
+      })}
+      {data.map((v, i) => {
+        const h = (v / max) * 120;
+        const x = 34 + i * 40;
+        return (
+          <g key={i}>
+            <rect x={x} y={130 - h} width="26" height={h} fill="#475569" />
+            <text x={x + 13} y="143" fontSize="7.5" textAnchor="middle" fill="#334155">{horas[i]}</text>
+          </g>
+        );
+      })}
+      {label && <text x="129" y="160" fontSize="8" textAnchor="middle" fill="#64748b">{label}</text>}
+    </svg>
+  );
+}
+
+function BarUtiles({ data }) {
+  const max = 8;
+  return (
+    <svg viewBox="0 0 200 150" width="100%" style={{ maxWidth: 240 }}>
+      {[0, 2, 4, 6, 8].map((g) => {
+        const y = 115 - (g / max) * 100;
+        return (
+          <g key={g}>
+            <line x1="26" y1={y} x2="190" y2={y} stroke="#e2e8f0" />
+            <text x="22" y={y + 3} fontSize="7" textAnchor="end" fill="#64748b">{g}</text>
+          </g>
+        );
+      })}
+      {data.map((v, i) => {
+        const h = (v / max) * 100;
+        const x = 44 + i * 48;
+        return (
+          <g key={i}>
+            <rect x={x} y={115 - h} width="30" height={h} fill="#475569" />
+            <text x={x + 15} y="128" fontSize="8" textAnchor="middle" fill="#334155">{i + 1}</text>
+          </g>
+        );
+      })}
+      <text x="108" y="142" fontSize="8" textAnchor="middle" fill="#64748b">Estudiante</text>
+    </svg>
+  );
+}
+
+function StemProb() {
+  const vals = [0.2, 0.02, 0.16, 0.25, 0.05, 0.12, 0.05, 0.15];
+  const max = 0.3;
+  return (
+    <svg viewBox="0 0 300 175" width="100%" style={{ maxWidth: 340 }}>
+      {[0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3].map((g) => {
+        const y = 140 - (g / max) * 120;
+        return (
+          <g key={g}>
+            <line x1="34" y1={y} x2="290" y2={y} stroke="#e2e8f0" />
+            <text x="30" y={y + 3} fontSize="7" textAnchor="end" fill="#64748b">{g.toFixed(2)}</text>
+          </g>
+        );
+      })}
+      {vals.map((v, i) => {
+        const x = 50 + i * 30;
+        const y = 140 - (v / max) * 120;
+        return (
+          <g key={i}>
+            <line x1={x} y1="140" x2={x} y2={y} stroke="#0f172a" strokeWidth="1" />
+            <circle cx={x} cy={y} r="3" fill="#0f172a" />
+            <text x={x} y={y - 6} fontSize="6.5" textAnchor="middle" fill="#334155">{v.toFixed(2)}</text>
+            <text x={x} y="152" fontSize="7.5" textAnchor="middle" fill="#334155">x{i + 1}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+function BarIngresos() {
+  const data = [
+    { m: "Agosto", v: 55 },
+    { m: "Sept.", v: 68 },
+    { m: "Octubre", v: 56 },
+    { m: "Nov.", v: 85 },
+  ];
+  const max = 100;
+  return (
+    <svg viewBox="0 0 300 175" width="100%" style={{ maxWidth: 340 }}>
+      {[0, 20, 40, 60, 80, 100].map((g) => {
+        const y = 140 - (g / max) * 120;
+        return (
+          <g key={g}>
+            <line x1="40" y1={y} x2="290" y2={y} stroke="#e2e8f0" />
+            <text x="36" y={y + 3} fontSize="7" textAnchor="end" fill="#64748b">${g}M</text>
+          </g>
+        );
+      })}
+      {data.map((d, i) => {
+        const h = (d.v / max) * 120;
+        const x = 58 + i * 58;
+        return (
+          <g key={d.m}>
+            <rect x={x} y={140 - h} width="40" height={h} fill="#64748b" />
+            <text x={x + 20} y="153" fontSize="8" textAnchor="middle" fill="#334155">{d.m}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+function Caja() {
+  return (
+    <svg viewBox="0 0 180 165" width="100%" style={{ maxWidth: 210 }}>
+      <polygon points="40,55 110,55 150,35 80,35" fill="#e2e8f0" stroke="#0f172a" />
+      <polygon points="110,55 110,135 150,115 150,35" fill="#94a3b8" stroke="#0f172a" />
+      <polygon points="40,55 40,135 110,135 110,55" fill="#cbd5e1" stroke="#0f172a" />
+      <text x="74" y="100" fontSize="11" textAnchor="middle" fill="#0f172a">8 cm²</text>
+      <text x="132" y="88" fontSize="10" textAnchor="middle" fill="#0f172a" transform="rotate(-30 132 88)">12 cm²</text>
+      <text x="94" y="50" fontSize="9" textAnchor="middle" fill="#0f172a">6 cm²</text>
+    </svg>
+  );
+}
+
+function TerrenoX() {
+  return (
+    <svg viewBox="0 0 150 155" width="100%" style={{ maxWidth: 140 }}>
+      <polygon points="30,20 70,20 70,80 110,80 110,120 30,120" fill="#94a3b8" stroke="#0f172a" />
+      <text x="50" y="16" fontSize="8" textAnchor="middle">10 m</text>
+      <text x="90" y="76" fontSize="8" textAnchor="middle">10 m</text>
+      <text x="20" y="70" fontSize="8" textAnchor="middle" transform="rotate(-90 20 70)">20 m</text>
+      <text x="70" y="135" fontSize="8" textAnchor="middle">20 m</text>
+      <text x="70" y="150" fontSize="9" textAnchor="middle" fontWeight="bold">Terreno X</text>
+    </svg>
+  );
+}
+
+function TerrenoZ() {
+  return (
+    <svg viewBox="0 0 170 165" width="100%" style={{ maxWidth: 160 }}>
+      <polygon points="20,20 100,20 100,80 150,80 150,120 20,120" fill="#94a3b8" stroke="#0f172a" />
+      <text x="60" y="16" fontSize="8" textAnchor="middle">20 m</text>
+      <text x="125" y="76" fontSize="8" textAnchor="middle">20 m</text>
+      <text x="12" y="70" fontSize="8" textAnchor="middle" transform="rotate(-90 12 70)">40 m</text>
+      <text x="85" y="135" fontSize="8" textAnchor="middle">40 m</text>
+      <text x="85" y="150" fontSize="9" textAnchor="middle" fontWeight="bold">Terreno Z</text>
+    </svg>
+  );
+}
+
+function Bermudas() {
+  return (
+    <svg viewBox="0 0 200 175" width="100%" style={{ maxWidth: 230 }}>
+      <polygon points="40,90 140,40 150,150" fill="none" stroke="#0f172a" strokeWidth="1.4" />
+      <text x="140" y="32" fontSize="9" textAnchor="middle">Bermuda</text>
+      <text x="22" y="92" fontSize="9" textAnchor="middle">Miami</text>
+      <text x="150" y="166" fontSize="9" textAnchor="middle">San Juan</text>
+      <text x="80" y="55" fontSize="8" transform="rotate(-26 80 55)">1.035 mi</text>
+      <text x="150" y="95" fontSize="8">954 mi</text>
+      <text x="80" y="130" fontSize="8" transform="rotate(45 80 130)">1.033 mi</text>
+    </svg>
+  );
+}
+
+function TrianguloSemi() {
+  return (
+    <svg viewBox="0 0 200 135" width="100%" style={{ maxWidth: 230 }}>
+      <path d="M 30 110 A 70 70 0 0 1 170 110 Z" fill="#f1f5f9" stroke="#0f172a" />
+      <polygon points="30,110 170,110 150,55" fill="#94a3b8" stroke="#0f172a" />
+      <text x="100" y="124" fontSize="10" textAnchor="middle">5 m</text>
+      <text x="78" y="78" fontSize="10" transform="rotate(-22 78 78)">4 m</text>
+      <text x="166" y="86" fontSize="10">3 m</text>
+    </svg>
+  );
+}
+
+function RectaHumedales() {
+  return (
+    <svg viewBox="0 0 220 150" width="100%" style={{ maxWidth: 280 }}>
+      <line x1="40" y1="115" x2="205" y2="115" stroke="#94a3b8" />
+      <line x1="40" y1="115" x2="40" y2="15" stroke="#94a3b8" />
+      <line x1="40" y1="115" x2="185" y2="35" stroke="#0f172a" strokeWidth="1.6" />
+      {[1, 2, 3, 4, 5, 6].map((x) => (
+        <text key={x} x={40 + x * 24} y="128" fontSize="7.5" textAnchor="middle" fill="#64748b">{x}</text>
+      ))}
+      <text x="120" y="142" fontSize="8" textAnchor="middle" fill="#64748b">Cantidad de hectáreas</text>
+      <text x="170" y="30" fontSize="9" fill="#0f172a">y = 8,7x</text>
+      <text x="20" y="65" fontSize="7" textAnchor="middle" transform="rotate(-90 20 65)" fill="#64748b">Inversión</text>
+    </svg>
+  );
+}
+
+function PilotoOpcion({ pts }) {
+  return (
+    <svg viewBox="0 0 160 100" width="100%" style={{ maxWidth: 170 }}>
+      <line x1="20" y1="80" x2="150" y2="80" stroke="#94a3b8" />
+      <line x1="20" y1="80" x2="20" y2="10" stroke="#94a3b8" />
+      <polyline points={pts} fill="none" stroke="#0f172a" strokeWidth="1.6" />
+      <text x="150" y="92" fontSize="7" textAnchor="end" fill="#64748b">segundos</text>
+      <text x="14" y="12" fontSize="7" textAnchor="end" fill="#64748b">Altura</text>
+    </svg>
+  );
+}
+
+// ---------- Banco de 25 preguntas ----------
+
+const PREGUNTAS = [
+  { n: 1, enunciado: "¿Cuál es el valor de la expresión (x² + 1) / 100 cuando x = 3?",
+    opciones: ["0,07", "0,16", "0,08", "0,10"], correcta: 3 },
+  { n: 2, enunciado: "Una empresa registra en la gráfica el promedio de las ventas, durante los primeros meses del año, de cuatro de sus productos: agua, gaseosa, cerveza y jugos. ¿Cuál producto obtuvo la mayor venta acumulada durante los meses reportados?",
+    figura: <BarVentas />, opciones: ["Gaseosa.", "Agua.", "Cerveza.", "Jugos."], correcta: 0 },
+  { n: 3, enunciado: "Una caja de cartón se diseña con todas sus caras rectangulares. La figura muestra el área superficial de tres de sus caras. ¿Cuál es el área superficial de la caja?",
+    figura: <Caja />, opciones: ["52 cm²", "48 cm²", "26 cm²", "24 cm²"], correcta: 0 },
+  { n: 4, enunciado: "La gráfica muestra la cantidad de pacientes que asistieron a un consultorio en una mañana. Para el día siguiente se espera que el número de pacientes se duplique en la hora que hubo menos pacientes, sin alterar el resto. ¿Cuál gráfica representa la cantidad de pacientes en el siguiente día?",
+    figura: <BarPacientes data={[2, 4, 10, 8, 6]} label="Día observado" />,
+    opciones: ["Opción A", "Opción B", "Opción C", "Opción D"],
+    figurasOpciones: [
+      <BarPacientes data={[2, 4, 10, 8, 6]} />,
+      <BarPacientes data={[4, 6, 12, 10, 8]} />,
+      <BarPacientes data={[4, 4, 4, 4, 4]} />,
+      <BarPacientes data={[4, 4, 10, 8, 6]} />,
+    ], correcta: 3 },
+  { n: 5, enunciado: "Un empresario compró un lote rectangular de 50 m de ancho y 120 m de largo, para repartirlo en partes iguales entre sus 8 hijos. ¿Cuál de las siguientes preguntas NO es posible responder?",
+    opciones: [
+      "¿Cuál es el área del lote del empresario?",
+      "¿Cuál es la ubicación que le corresponde a cada hijo dentro del lote?",
+      "¿Cuál es el perímetro del lote del empresario?",
+      "¿Cuál es la fracción del lote que le corresponde a cada hijo?",
+    ], correcta: 1 },
+  { n: 6, enunciado: "Cada metro cuadrado de los terrenos cuesta $1.000.000. Un cliente afirma que el precio del terreno Z debe ser el doble del de X, porque el área de Z es el doble de la de X. ¿Es verdadera la afirmación del cliente?",
+    figura: (<div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end", justifyContent: "center" }}><TerrenoX /><TerrenoZ /></div>),
+    opciones: [
+      "Sí, porque el perímetro del terreno Z es el doble del de X.",
+      "No, porque se duplicaron todas las dimensiones; entonces, el área se cuadruplica.",
+      "Sí, porque se duplicaron todas las dimensiones; entonces, el área se duplica.",
+      "No, porque el perímetro de X es la cuarta parte del de Z.",
+    ], correcta: 1 },
+  { n: 7, enunciado: "Un piloto comenta: durante los primeros 30 s aumentó la altura de forma constante; luego descendió de forma constante durante 5 s; después giró 20 s manteniendo la misma altura; y por último aterrizó reduciendo la altura de forma constante durante 25 s. ¿Cuál gráfica representa correctamente esta información?",
+    opciones: ["Opción A", "Opción B", "Opción C", "Opción D"],
+    figurasOpciones: [
+      <PilotoOpcion pts="20,80 60,25 80,25 100,25 150,70" />,
+      <PilotoOpcion pts="20,80 60,18 70,40 110,40 150,75" />,
+      <PilotoOpcion pts="20,80 60,20 70,55 150,70" />,
+      <PilotoOpcion pts="20,80 60,20 75,55 90,25 150,72" />,
+    ], correcta: 1 },
+  { n: 8, enunciado: "Se llama «par» cuando dos dados muestran el mismo número. Un estudiante afirma que es más probable obtener un «once» (suma 11) que un «par». ¿Es verdadera la afirmación?",
+    opciones: [
+      "Sí, pues hay dos formas de obtener once, pero solo una de cada par, así que esta última probabilidad es menor.",
+      "Sí, pues la probabilidad es mayor cuando los dados muestran números distintos.",
+      "No, pues la probabilidad siempre será la misma para cualquier resultado esperado.",
+      "No, pues solo hay dos formas de obtener once mientras que hay más formas de obtener par; por tanto, esa probabilidad es mayor.",
+    ], correcta: 3 },
+  { n: 9, enunciado: "Una agencia usa T = (1/e + m + s²)·k, con e = escalas, m = maletas, s = días del viaje y k = valor fijado por cada aerolínea. Isabella lleva 5 maletas, hará una sola escala y estará dos semanas. ¿Qué información le falta para calcular el costo?",
+    opciones: [
+      "El valor de e (número de escalas).",
+      "La cantidad m de maletas que puede llevar.",
+      "El número s de días que durará su viaje.",
+      "El valor de k fijado por cada aerolínea.",
+    ], correcta: 3 },
+  { n: 10, enunciado: "Una vacante ofrece $950.000 de salario básico y $75.000 adicionales por cada año de experiencia. ¿Cuál procedimiento permite calcular el salario de un aspirante cualquiera?",
+    opciones: [
+      "Multiplicar $950.000 por $75.000 y sumar los años de experiencia.",
+      "Multiplicar $950.000 por los años de experiencia y adicionar $75.000.",
+      "Sumar $950.000 al resultado de multiplicar $75.000 por los años de experiencia.",
+      "Sumar $950.000 y $75.000, y multiplicar el resultado por los años de experiencia.",
+    ], correcta: 2 },
+  { n: 11, enunciado: "Para hallar la moda se cuenta cuántas veces se repite cada número y se elige el que más se repite. ¿Cuál conjunto tiene una única moda?",
+    opciones: ["{2, 3, 4, 4, 5, 5}", "{2, 3, 4, 5, 5, 6}", "{1, 2, 3, 4, 5, 6}", "{1, 1, 3, 3, 5, 5}"], correcta: 1 },
+  { n: 12, enunciado: "Una empresa logra su mayor ganancia cuando produce el promedio entre las producciones mínima y máxima. Si la máxima es 1.000 unidades más que la mínima y la mayor ganancia ocurre con 800 unidades, ¿cuál es la producción máxima?",
+    opciones: ["300 unidades.", "1.300 unidades.", "1.400 unidades.", "1.800 unidades."], correcta: 1 },
+  { n: 13, enunciado: "Una presentación de magia tiene 3 actos: desaparición (3 opciones), hipnosis (2 opciones) y adivinanza (4 opciones). La persona calcula 3 + 2 + 4 = 9 maneras. ¿Es verdadera esta afirmación?",
+    opciones: [
+      "Sí, porque basta sumar la cantidad de actos de cada tipo que conoce.",
+      "Sí, porque presenta 3 actos de 3 tipos, es decir 3 × 3 = 9.",
+      "No, porque se deben multiplicar: 3 × 2 × 4 = 24.",
+      "No, porque se debe sumar la cantidad de actos y el tipo de actos pedidos.",
+    ], correcta: 2 },
+  { n: 14, enunciado: "Tres estudiantes comparan sus útiles. Borradores — E1: 1, 0; E2: 1, 1; E3: 0, 1. Cuadernos — E1: 0, 3; E2: 2, 0; E3: 2, 2. Lápices — E1: 1, 0; E2: 2, 0; E3: 1, 1. ¿Cuál gráfica permite conocer la cantidad total de útiles de cada estudiante?",
+    opciones: ["Opción A", "Opción B", "Opción C", "Opción D"],
+    figurasOpciones: [
+      <BarUtiles data={[2, 5, 3]} />,
+      <BarUtiles data={[3, 4, 5]} />,
+      <BarUtiles data={[2, 4, 4]} />,
+      <BarUtiles data={[5, 6, 7]} />,
+    ], correcta: 3 },
+  { n: 15, enunciado: "En un bulto de café hay granos con nivel de cafeína bajo, medio y alto. Si la probabilidad de extraer un grano de nivel bajo es 0,27, ¿cuál es la probabilidad de que tenga nivel medio o alto?",
+    opciones: ["0,09", "0,73", "0,54", "0,37"], correcta: 1 },
+  { n: 16, enunciado: "La inversión para recuperar hectáreas de humedales se modela con y = 8,7x. Para 8,7 hectáreas se calcula la inversión de una hectárea y se multiplica por 8,7. Este procedimiento es:",
+    figura: <RectaHumedales />,
+    opciones: [
+      "Correcto, porque la inversión es directamente proporcional a la cantidad de hectáreas.",
+      "Incorrecto, porque solo aparece la inversión hasta seis hectáreas.",
+      "Correcto, porque a medida que aumentan las hectáreas, aumenta la inversión.",
+      "Incorrecto, porque se espera que a más hectáreas, la inversión disminuya.",
+    ], correcta: 0 },
+  { n: 17, enunciado: "Una empresa vende regularmente 40 piezas a $30 c/u. Cuando vende entre 41 y 79 piezas usa: Paso 1, valor regular = $30 × 40; Paso 2, (piezas − 40) × $30; Paso 3, dividir el Paso 2 entre el Paso 1. ¿Qué características tienen los resultados posibles?",
+    opciones: ["Son valores negativos.", "Son valores mayores que 1.200.", "Son valores entre 0 y 1.", "Son valores entre 1 y 40."], correcta: 2 },
+  { n: 18, enunciado: "La gráfica presenta la probabilidad de que una variable tome los valores x1 a x8. ¿Cuál tabla muestra los valores con probabilidad menor que 0,1?",
+    figura: <StemProb />,
+    opciones: [
+      "x1: 0,20 — x2: 0,02 — x3: 0,16",
+      "x2: 0,02 — x3: 0,16 — x6: 0,12",
+      "x2: 0,02 — x5: 0,05 — x7: 0,05",
+      "x1: 0,20 — x3: 0,16 — x4: 0,25",
+    ], correcta: 2 },
+  { n: 19, enunciado: "Tras lanzar un producto en agosto, el gerente afirmó que los ingresos aumentaron de forma creciente en los 3 meses siguientes y presentó la gráfica. ¿Por qué la gráfica es inconsistente con su afirmación?",
+    figura: <BarIngresos />,
+    opciones: [
+      "Porque el orden de los meses debería ser noviembre, septiembre, octubre y agosto.",
+      "Porque en octubre se indican ingresos menores al mes inmediatamente anterior.",
+      "Porque los ingresos de septiembre deberían ser menores que los de agosto y octubre.",
+      "Porque debió incluirse julio para comparar con los ingresos previos.",
+    ], correcta: 1 },
+  { n: 20, enunciado: "Una institución ofrece 4 módulos. El valor por grupo es: I $1.400.000, II $900.000, III $1.600.000, IV $450.000. Cada módulo se hace con cursos de mínimo 20 y máximo 30 personas. Si se pagó cada módulo para 30 trabajadores, el módulo que más le costó a la empresa fue:",
+    opciones: ["I.", "II.", "III.", "IV."], correcta: 2 },
+  { n: 21, enunciado: "Por cada moneda que Miguel introduce en su alcancía en un día, al siguiente introduce el doble. El viernes insertó 512 monedas. ¿Cuántas introdujo el miércoles de esa misma semana?",
+    opciones: ["32.", "64.", "128.", "508."], correcta: 2 },
+  { n: 22, enunciado: "En un campeonato un equipo necesita 25 puntos para clasificar. En la ronda actual cada equipo juega 10 partidos: 3 puntos por ganar, 1 por empatar y 0 por perder. ¿Cuál pregunta se puede responder con la información dada?",
+    opciones: [
+      "¿Cuál es el mínimo de partidos que se deben ganar para clasificar?",
+      "¿Cuántos partidos deben perder los contrincantes para que el equipo clasifique?",
+      "¿Cuál es el total de partidos que se juega en todo el torneo?",
+      "¿Cuántos equipos clasifican a la ronda?",
+    ], correcta: 0 },
+  { n: 23, enunciado: "En un concierto, el 50% de los asistentes se retiró después de una hora, el 30% del total después de dos horas, y los 100 restantes se quedaron hasta el final. ¿Cuántos asistentes había al comienzo?",
+    opciones: ["500.", "400.", "330.", "180."], correcta: 0 },
+  { n: 24, enunciado: "El triángulo de las Bermudas se forma entre Miami, Bermuda y San Juan, con las distancias de la figura. Si una milla son 1,6 kilómetros, ¿cuál es la distancia en kilómetros entre Miami y Bermuda?",
+    figura: <Bermudas />, opciones: ["625 km.", "646,9 km.", "1.036,6 km.", "1.656 km."], correcta: 3 },
+  { n: 25, enunciado: "Se necesita encontrar el área del triángulo sombreado. ¿Cuál es el área del triángulo?",
+    figura: <TrianguloSemi />, opciones: ["15 m²", "12 m²", "6 m²", "5π m²"], correcta: 2 },
+];
+
+// ---------- App ----------
+
+function App() {
+  const [fase, setFase] = useState("registro");
+  const [nombre, setNombre] = useState("");
+  const [curso, setCurso] = useState("");
+  const [idx, setIdx] = useState(0);
+  const [respuestas, setRespuestas] = useState(Array(PREGUNTAS.length).fill(null));
+  const [enviado, setEnviado] = useState(false);
+
+  const total = PREGUNTAS.length;
+  const contestadas = respuestas.filter((r) => r !== null).length;
+
+  const resultado = useMemo(() => {
+    let correctas = 0;
+    respuestas.forEach((r, i) => { if (r === PREGUNTAS[i].correcta) correctas++; });
+    return { correctas, pct: Math.round((correctas / total) * 100), incorrectas: total - correctas };
+  }, [respuestas, total]);
+
+  const elegir = (op) => {
+    const nuevo = [...respuestas];
+    nuevo[idx] = op;
+    setRespuestas(nuevo);
+  };
+
+  const iniciar = () => { if (nombre.trim() && curso.trim()) setFase("examen"); };
+
+  const enviarSheets = () => {
+    const url =
+      SCRIPT_URL +
+      "?nombre=" + encodeURIComponent(nombre) +
+      "&curso=" + encodeURIComponent(curso) +
+      "&puntaje=" + resultado.correctas +
+      "&total=" + total +
+      "&porcentaje=" + resultado.pct +
+      "&fecha=" + encodeURIComponent(new Date().toLocaleString("es-CO"));
+    window.open(url, "_blank");
+    setEnviado(true);
+  };
+
+  const p = PREGUNTAS[idx];
+  const ff = "'Segoe UI', system-ui, -apple-system, sans-serif";
+
+  // ---- Registro ----
+  if (fase === "registro") {
+    const listo = nombre.trim() && curso.trim();
+    return (
+      <div style={{ ...wrap, fontFamily: ff }}>
+        <div style={{ ...card, maxWidth: 460, margin: "0 auto", padding: 0, overflow: "hidden" }}>
+          <div style={{ background: C.ink, color: "#fff", padding: "28px 30px" }}>
+            <div style={{ fontSize: 12, letterSpacing: 3, color: C.amber, fontWeight: 700 }}>SIMULACRO · SABER 11</div>
+            <h1 style={{ margin: "6px 0 2px", fontSize: 30, fontWeight: 800, lineHeight: 1.1 }}>ICFES 2025</h1>
+            <div style={{ fontSize: 14, opacity: 0.85 }}>Matemáticas · 25 preguntas</div>
+            <div style={{ fontSize: 11.5, opacity: 0.6, marginTop: 14 }}>I.E. Técnica Agropecuaria de Luruaco</div>
+          </div>
+          <div style={{ padding: 30 }}>
+            <label style={lbl}>Nombre del estudiante</label>
+            <input style={inp} value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombres y apellidos" />
+            <label style={lbl}>Curso</label>
+            <input style={inp} value={curso} onChange={(e) => setCurso(e.target.value)} placeholder="Ej: 11-A" />
+            <button onClick={iniciar} disabled={!listo}
+              style={{ ...btn, width: "100%", marginTop: 22, opacity: listo ? 1 : 0.45, cursor: listo ? "pointer" : "not-allowed" }}>
+              Comenzar simulacro
+            </button>
+            <p style={{ fontSize: 12, color: C.muted, marginTop: 16, lineHeight: 1.5 }}>
+              Responde las 25 preguntas. Puedes navegar entre ellas y cambiar tus respuestas antes de finalizar.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Resultados ----
+  if (fase === "resultados") {
+    const r = resultado.pct;
+    const radio = 70;
+    const circ = 2 * Math.PI * radio;
+    const color = r >= 70 ? C.good : r >= 40 ? C.amber : C.bad;
+    return (
+      <div style={{ ...wrap, fontFamily: ff }}>
+        <div style={{ ...card, maxWidth: 720, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", paddingBottom: 8 }}>
+            <div style={{ fontSize: 12, letterSpacing: 2, color: C.amber, fontWeight: 700 }}>RESULTADOS</div>
+            <h2 style={{ margin: "4px 0 0", color: C.ink, fontSize: 22 }}>{nombre}</h2>
+            <div style={{ color: C.muted, fontSize: 13 }}>Curso {curso}</div>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "center", margin: "10px 0 4px" }}>
+            <svg width="180" height="180" viewBox="0 0 180 180">
+              <circle cx="90" cy="90" r={radio} fill="none" stroke={C.line} strokeWidth="16" />
+              <circle cx="90" cy="90" r={radio} fill="none" stroke={color} strokeWidth="16" strokeLinecap="round"
+                strokeDasharray={circ} strokeDashoffset={circ - (r / 100) * circ} transform="rotate(-90 90 90)" />
+              <text x="90" y="86" textAnchor="middle" fontSize="40" fontWeight="800" fill={C.ink}>{r}%</text>
+              <text x="90" y="110" textAnchor="middle" fontSize="13" fill={C.muted}>{resultado.correctas} / {total}</text>
+            </svg>
+          </div>
+
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 18 }}>
+            <Pill label="Correctas" value={resultado.correctas} color={C.good} />
+            <Pill label="Incorrectas" value={resultado.incorrectas} color={C.bad} />
+          </div>
+
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+            <button onClick={enviarSheets} style={{ ...btn }}>
+              {enviado ? "Registrar de nuevo" : "Registrar resultado en Google Sheets"}
+            </button>
+            <button onClick={() => { setFase("examen"); setIdx(0); }} style={{ ...btnGhost }}>Revisar respuestas</button>
+          </div>
+          {enviado && (
+            <p style={{ textAlign: "center", color: C.good, fontSize: 12.5, marginTop: 12 }}>
+              Se abrió una pestaña para enviar los datos. Si no se registró, verifica que la URL del script esté
+              desplegada como aplicación web (termina en /exec).
+            </p>
+          )}
+
+          <hr style={{ border: "none", borderTop: `1px solid ${C.line}`, margin: "22px 0 6px" }} />
+          <h3 style={{ color: C.ink, fontSize: 16, margin: "8px 0 12px" }}>Revisión</h3>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {PREGUNTAS.map((q, i) => {
+              const ok = respuestas[i] === q.correcta;
+              const sin = respuestas[i] === null;
+              return (
+                <button key={i} onClick={() => { setFase("examen"); setIdx(i); }} title={`Pregunta ${q.n}`}
+                  style={{ width: 38, height: 38, borderRadius: 9, border: "none", cursor: "pointer",
+                    fontWeight: 700, color: "#fff", background: sin ? C.muted : ok ? C.good : C.bad }}>
+                  {q.n}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Examen ----
+  const seleccion = respuestas[idx];
+  const revisando = contestadas === total || enviado;
+  return (
+    <div style={{ ...wrap, fontFamily: ff }}>
+      <div style={{ ...card, maxWidth: 760, margin: "0 auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+          <div style={{ fontWeight: 800, color: C.ink, fontSize: 15 }}>Simulacro ICFES 2025 · Matemáticas</div>
+          <div style={{ fontSize: 13, color: C.muted }}>{idx + 1} <span style={{ opacity: 0.6 }}>/ {total}</span></div>
+        </div>
+        <div style={{ height: 8, background: C.line, borderRadius: 99, margin: "10px 0 4px" }}>
+          <div style={{ width: `${((idx + 1) / total) * 100}%`, height: "100%", background: C.amber, borderRadius: 99, transition: "width .25s" }} />
+        </div>
+        <div style={{ fontSize: 11.5, color: C.muted, marginBottom: 18 }}>{contestadas} de {total} respondidas</div>
+
+        <div style={{ display: "flex", gap: 10, marginBottom: 6 }}>
+          <span style={{ background: C.ink, color: "#fff", borderRadius: 8, padding: "3px 10px", fontWeight: 700, fontSize: 13, height: "fit-content" }}>{p.n}</span>
+          <p style={{ margin: 0, color: C.inkSoft, fontSize: 15.5, lineHeight: 1.55 }}>{p.enunciado}</p>
+        </div>
+
+        {p.figura && (
+          <div style={{ margin: "14px 0", padding: 12, background: C.paper, borderRadius: 12, display: "flex", justifyContent: "center" }}>
+            {p.figura}
+          </div>
+        )}
+
+        <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+          {p.opciones.map((op, i) => {
+            const letra = ["A", "B", "C", "D"][i];
+            const elegida = seleccion === i;
+            const esCorrecta = i === p.correcta;
+            let bg = C.card, bd = C.line;
+            if (revisando) {
+              if (esCorrecta) { bg = "#eaf6ef"; bd = C.good; }
+              else if (elegida) { bg = "#fbece9"; bd = C.bad; }
+            } else if (elegida) { bg = "#fdf2e3"; bd = C.amber; }
+            return (
+              <button key={i} onClick={() => !revisando && elegir(i)}
+                style={{ textAlign: "left", display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 14px",
+                  borderRadius: 12, border: `2px solid ${bd}`, background: bg, cursor: revisando ? "default" : "pointer",
+                  fontSize: 14.5, color: C.inkSoft }}>
+                <span style={{ fontWeight: 800, color: elegida || (revisando && esCorrecta) ? C.ink : C.muted, minWidth: 16 }}>{letra}</span>
+                <span style={{ flex: 1 }}>{p.figurasOpciones ? <span style={{ display: "block" }}>{p.figurasOpciones[i]}</span> : op}</span>
+                {revisando && esCorrecta && <span style={{ color: C.good, fontWeight: 800 }}>✓</span>}
+                {revisando && elegida && !esCorrecta && <span style={{ color: C.bad, fontWeight: 800 }}>✗</span>}
+              </button>
+            );
+          })}
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 24, gap: 10 }}>
+          <button onClick={() => setIdx((v) => Math.max(0, v - 1))} disabled={idx === 0} style={{ ...btnGhost, opacity: idx === 0 ? 0.4 : 1 }}>← Anterior</button>
+          {idx < total - 1 ? (
+            <button onClick={() => setIdx((v) => Math.min(total - 1, v + 1))} style={{ ...btn }}>Siguiente →</button>
+          ) : (
+            <button onClick={() => setFase("resultados")} style={{ ...btn, background: C.good }}>Finalizar y ver resultados</button>
+          )}
+        </div>
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 20 }}>
+          {PREGUNTAS.map((q, i) => (
+            <button key={i} onClick={() => setIdx(i)}
+              style={{ width: 30, height: 30, borderRadius: 7, fontSize: 12, fontWeight: 700, cursor: "pointer",
+                border: i === idx ? `2px solid ${C.ink}` : `1px solid ${C.line}`,
+                background: respuestas[i] !== null ? C.amber : C.card,
+                color: respuestas[i] !== null ? "#fff" : C.muted }}>
+              {q.n}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Pill({ label, value, color }) {
+  return (
+    <div style={{ background: "#fff", border: `1px solid ${C.line}`, borderRadius: 12, padding: "10px 18px", textAlign: "center", minWidth: 92 }}>
+      <div style={{ fontSize: 24, fontWeight: 800, color }}>{value}</div>
+      <div style={{ fontSize: 11.5, color: C.muted }}>{label}</div>
+    </div>
+  );
+}
+
+const wrap = { minHeight: "100vh", background: C.paper, padding: "28px 16px", boxSizing: "border-box" };
+const card = { background: C.card, borderRadius: 18, padding: 26, boxShadow: "0 8px 30px rgba(15,42,63,.08)", border: `1px solid ${C.line}` };
+const lbl = { display: "block", fontSize: 12.5, fontWeight: 700, color: C.ink, margin: "14px 0 6px" };
+const inp = { width: "100%", padding: "11px 13px", borderRadius: 10, border: `1.5px solid ${C.line}`, fontSize: 15, boxSizing: "border-box", outline: "none" };
+const btn = { background: C.ink, color: "#fff", border: "none", borderRadius: 10, padding: "11px 20px", fontSize: 14.5, fontWeight: 700, cursor: "pointer" };
+const btnGhost = { background: "#fff", color: C.ink, border: `1.5px solid ${C.line}`, borderRadius: 10, padding: "11px 20px", fontSize: 14.5, fontWeight: 700, cursor: "pointer" };
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+</body>
+</html>
