@@ -471,8 +471,19 @@ function App() {
       "&total=" + total +
       "&porcentaje=" + resultado.pct +
       "&fecha=" + encodeURIComponent(new Date().toLocaleString("es-CO"));
-    window.open(url, "_blank");
+    // Envío en segundo plano: un iframe oculto navega a la URL del Apps Script,
+    // que ejecuta doGet y escribe la fila en la hoja sin abrir pestañas.
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    setTimeout(() => { try { document.body.removeChild(iframe); } catch (e) {} }, 10000);
     setEnviado(true);
+  };
+
+  const finalizar = () => {
+    setFase("resultados");
+    if (!enviado) enviarSheets();
   };
 
   const p = PREGUNTAS[idx];
@@ -546,8 +557,8 @@ function App() {
           </div>
           {enviado && (
             <p style={{ textAlign: "center", color: C.good, fontSize: 12.5, marginTop: 12 }}>
-              Se abrió una pestaña para enviar los datos. Si no se registró, verifica que la URL del script esté
-              desplegada como aplicación web (termina en /exec).
+              El resultado se registró automáticamente en Google Sheets. Si no aparece en la hoja, verifica que la URL
+              del script esté desplegada como aplicación web (termina en /exec).
             </p>
           )}
 
@@ -626,7 +637,7 @@ function App() {
           {idx < total - 1 ? (
             <button onClick={() => setIdx((v) => Math.min(total - 1, v + 1))} style={{ ...btn }}>Siguiente →</button>
           ) : (
-            <button onClick={() => setFase("resultados")} style={{ ...btn, background: C.good }}>Finalizar y ver resultados</button>
+            <button onClick={finalizar} style={{ ...btn, background: C.good }}>Finalizar y ver resultados</button>
           )}
         </div>
 
