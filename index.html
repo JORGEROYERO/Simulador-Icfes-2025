@@ -26,10 +26,11 @@ const { useState, useMemo } = React;
 //  CONFIGURA AQUÍ LA URL DE TU APPS SCRIPT.
 //  Debe ser la URL de IMPLEMENTACIÓN como aplicación web
 //  (Implementar > Nueva implementación > Aplicación web) y
-//  terminar en /exec. NO sirve la URL del editor (/edit).
+//  terminar en /exec. NO sirve la URL del editor (/edit) ni la
+//  página de inicio de Apps Script (script.google.com/home...).
 //  Ejemplo: https://script.google.com/macros/s/AKfyc.../exec
 const SCRIPT_URL =
-  "https://script.google.com/macros/s/PEGA_AQUI_TU_ID_DE_IMPLEMENTACION/exec";
+  "https://script.google.com/macros/s/AKfycbwMrKr8zH4a6saHbOvpy4MSwxh7_BkCoIi03_D_nyTF3YeVnP-Gz8psXTc4JJHhs_IjXg/exec";
 // ============================================================
 
 const C = {
@@ -471,13 +472,8 @@ function App() {
       "&total=" + total +
       "&porcentaje=" + resultado.pct +
       "&fecha=" + encodeURIComponent(new Date().toLocaleString("es-CO"));
-    // Envío en segundo plano: un iframe oculto navega a la URL del Apps Script,
-    // que ejecuta doGet y escribe la fila en la hoja sin abrir pestañas.
-    const iframe = document.createElement("iframe");
-    iframe.style.display = "none";
-    iframe.src = url;
-    document.body.appendChild(iframe);
-    setTimeout(() => { try { document.body.removeChild(iframe); } catch (e) {} }, 10000);
+    // Envío por GET abriendo la URL del Apps Script en una pestaña.
+    window.open(url, "_blank");
     setEnviado(true);
   };
 
@@ -557,8 +553,8 @@ function App() {
           </div>
           {enviado && (
             <p style={{ textAlign: "center", color: C.good, fontSize: 12.5, marginTop: 12 }}>
-              El resultado se registró automáticamente en Google Sheets. Si no aparece en la hoja, verifica que la URL
-              del script esté desplegada como aplicación web (termina en /exec).
+              El resultado se envió a Google Sheets (se abrió una pestaña). Si no aparece en la hoja, verifica que
+              SCRIPT_URL sea la URL de implementación de la aplicación web, la que termina en /exec.
             </p>
           )}
 
