@@ -1147,7 +1147,12 @@ function App() {
     if (nombre.trim() && curso.trim()) setFase("examen");
   };
   const enviarSheets = () => {
-    const url = SCRIPT_URL + "?nombre=" + encodeURIComponent(nombre) + "&curso=" + encodeURIComponent(curso) + "&puntaje=" + resultado.correctas + "&total=" + total + "&porcentaje=" + resultado.pct + "&fecha=" + encodeURIComponent(new Date().toLocaleString("es-CO"));
+    let url = SCRIPT_URL + "?asignatura=" + encodeURIComponent("Simulacro ICFES 2025") + "&nombre=" + encodeURIComponent(nombre) + "&curso=" + encodeURIComponent(curso) + "&puntaje=" + resultado.correctas + "&total=" + total + "&porcentaje=" + resultado.pct + "&fecha=" + encodeURIComponent(new Date().toLocaleString("es-CO"));
+    PREGUNTAS.forEach((q, i) => {
+      let marca;
+      if (respuestas[i] === null) marca = "-";else if (respuestas[i] === q.correcta) marca = "✓";else marca = "✗";
+      url += "&p" + q.n + "=" + encodeURIComponent(marca);
+    });
     window.open(url, "_blank");
     setEnviado(true);
   };
